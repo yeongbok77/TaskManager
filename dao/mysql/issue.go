@@ -9,25 +9,26 @@ func GetAllIssue(page, size int) (issues []*models.Issue, err error) {
 	return
 }
 
-// GetMilestone 根据 issue_id 获取 milestone
-func GetMilestone(issueId int64) (milestones []*models.Milestone, err error) {
-	err = db.Preload("Issue").Find(&milestones, "issue_id = ?", issueId).Error
+// CreateIssue 根据用户写入的内容，创建一个 issue
+func CreateIssue(content string) (err error) {
+	issue := &models.Issue{Content: content}
+	err = db.Select("content").Create(&issue).Error
 	return
 }
 
-// GetTag 根据 issueId 来获取 tag
-func GetTag(issueId int64) (tags []*models.Tag, err error) {
-	err = db.Preload("Issue").Find(&tags, "issue_id = ?", issueId).Error
+// DeleteIssue 根据 issueId 删除 issue
+func DeleteIssue(issueId int64) (err error) {
+	err = db.Delete(&models.Issue{}, issueId).Error
 	return
 }
 
-// GetComment 根据 issueId 来获取 comment
-func GetComment(issueId int64) (comments []*models.Comment, err error) {
-	err = db.Preload("Issue").Find(&comments, "issue_id = ?", issueId).Error
+// UpdateIssue 根据 issueId 和用户输入的内容，更新 issue内容
+func UpdateIssue(issueId int64, content string) (err error) {
+	err = db.Model(&models.Issue{}).Where("id = ?", issueId).Update("content", content).Error
 	return
 }
 
-// AddIssue 根据用户写入的内容，创建一个 issue
-func AddIssue(content string) (err error) {
+func GetAllInformation(issue *models.Issue) (err error) {
+	err = db.Model(&models.Issue{}).Preload("Milestones").Preload("Tags").Preload("Comments").Find(&issue).Error
 	return
 }

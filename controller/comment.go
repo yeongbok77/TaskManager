@@ -7,34 +7,30 @@ import (
 	"strconv"
 )
 
-func ActionMilestoneHandler(c *gin.Context) {
-
-}
-
-// AddMilestoneHandler 为 issue 分配 milestone
-func AddMilestoneHandler(c *gin.Context) {
+// AddCommentHandler 为 issue 添加评论
+func AddCommentHandler(c *gin.Context) {
 	var (
 		issueId int64
 		content string
 		err     error
 	)
 	// 获取参数
-	content = c.Query("content")
+	content = c.PostForm("content")
 	if issueId, err = strconv.ParseInt(c.Query("issueId"), 0, 64); err != nil {
-		zap.L().Error("AddMilestoneHandler-->    strconv.ParseInt Err:", zap.Error(err))
+		zap.L().Error("AddCommentHandler-->    strconv.ParseInt Err:", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
 	// 业务处理
-	if err = logic.AddMilestone(issueId, content); err != nil {
-		zap.L().Error("AddMilestoneHandler-->    logic.AddMilestone Err:", zap.Error(err))
+	if err = logic.AddComment(issueId, content); err != nil {
+		zap.L().Error("AddCommentHandler-->    logic.AddComment Err:", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
 	// 操作成功
-	ResponseSuccess(c, nil)
+	ResponseSuccess(c, CodeServerBusy)
 	return
 
 }

@@ -1,4 +1,4 @@
-// Package controller 包主要做校验参数、返回响应等操作
+// Package controller 主要做获取参数、返回响应等操作
 package controller
 
 import (
@@ -106,19 +106,4 @@ func ActionIssueHandler(c *gin.Context) {
 	// 操作成功
 	ResponseSuccess(c, nil)
 	return
-}
-
-// AddMilestoneHandler 为 issue 分配 milestone
-func AddMilestoneHandler(c *gin.Context) {
-
-}
-
-// AddTagHandler 为 issue 分配 tag
-func AddTagHandler(c *gin.Context) {
-
-}
-
-// AddCommentHandler 为 issue 添加评论
-func AddCommentHandler(c *gin.Context) {
-
 }
