@@ -1,10 +1,20 @@
 package mysql
 
-import "github.com/yeongbok77/TaskManager/models"
+import (
+	"github.com/yeongbok77/TaskManager/models"
+)
 
 // CreateTag 创建一个 tag
-func CreateTag(issueId int64, content string) (err error) {
-	tag := &models.Tag{IssueId: issueId, Content: content}
-	err = db.Select("issue_id", "content").Create(&tag).Error
+
+// GetTags 根据 tagId 获取 tag
+func GetTags(tagIds []string) (tags []*models.Tag, err error) {
+	err = db.Find(&tags, tagIds).Error
+	return
+}
+
+// CreateTag 创建 tag
+func CreateTag(content string) (err error) {
+	tag := &models.Tag{Content: content}
+	err = db.Select("content").Create(&tag).Error
 	return
 }

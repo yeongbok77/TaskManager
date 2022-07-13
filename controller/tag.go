@@ -7,26 +7,63 @@ import (
 	"strconv"
 )
 
-// AddTagHandler 为 issue 分配 tag
-func AddTagHandler(c *gin.Context) {
+// ApplyTagHandler 为 issue 分配 tag
+func ApplyTagHandler(c *gin.Context) {
 	var (
 		issueId int64
-		content string
-		err     error
+		tagId   int64
+
+		err error
 	)
-	// 获取参数
-	content = c.Query("content")
+	// 获取 issueId
 	if issueId, err = strconv.ParseInt(c.Query("issueId"), 0, 64); err != nil {
-		zap.L().Error("AddTagHandler-->    strconv.ParseInt Err:", zap.Error(err))
+		zap.L().Error("ApplyTagHandler-->    strconv.ParseInt Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 获取 tagId
+	if tagId, err = strconv.ParseInt(c.Query("tagId"), 0, 64); err != nil {
+		zap.L().Error("ApplyTagHandler-->    strconv.ParseInt Err:", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 
 	// 业务处理
-	if err = logic.AddTag(issueId, content); err != nil {
-		zap.L().Error("AddTagHandler-->    logic.AddTag Err:", zap.Error(err))
+	if err = logic.ApplyTag(issueId, tagId); err != nil {
+		zap.L().Error("ApplyTagHandler-->    logic.ApplyTag Err:", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
+	}
+
+	// 操作成功
+	ResponseSuccess(c, nil)
+	return
+
+}
+
+// ActionTagHandler tag 的增删改
+func ActionTagHandler(c *gin.Context) {
+	var (
+		actionType int
+		content    string
+		err        error
+	)
+	// 获取 actionType 参数
+	if actionType, err = strconv.Atoi(c.Query("actionType")); err != nil {
+		zap.L().Error("ActionTagHandler-->    strconv.Atoi Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// actionType:  1 创建tag
+	switch actionType {
+	case 1:
+		content = c.Query("content")
+		if err = logic.CreateTag(content); err != nil {
+			zap.L().Error("ActionTagHandler-->    logic.CreateTag Err:", zap.Error(err))
+			ResponseError(c, CodeServerBusy)
+			return
+		}
 	}
 
 	// 操作成功

@@ -5,9 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/yeongbok77/TaskManager/logic"
 	"github.com/yeongbok77/TaskManager/models"
-	"strconv"
-
 	"go.uber.org/zap"
+	"strconv"
+	"strings"
 )
 
 // ListIssueHandler 根据分页参数获取 issue , 并且附带 milestone, tag, comment
@@ -59,7 +59,7 @@ func ActionIssueHandler(c *gin.Context) {
 		return
 	}
 	/*
-		actionType: 1 代表增加 issue 操作
+		actionType: 1 代表创建 issue 操作
 					2 代表删除 issue 操作
 					3 代表修改 issue 操作
 	*/
@@ -106,4 +106,47 @@ func ActionIssueHandler(c *gin.Context) {
 	// 操作成功
 	ResponseSuccess(c, nil)
 	return
+}
+
+func ListIssueTagFilterHandler(c *gin.Context) {
+	var (
+		issues    []*models.Issue
+		tagIdsStr string
+		page      int
+		size      int
+		err       error
+	)
+
+	// 获取参数 page 和 size 参数
+	// 获取参数 page 和 size 参数
+	if page, err = strconv.Atoi(c.Query("page")); err != nil {
+		zap.L().Error("ListIssueHandler-->	strconv.Atoi Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	if size, err = strconv.Atoi(c.Query("size")); err != nil {
+		zap.L().Error("ListIssueHandler-->    strconv.Atoi Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 获取 tagId 参数
+	// 接口支持使用多个tag进行过滤, Query 传入的参数格式为数组形式 `tagIds=“1,2,3,4”`
+	// 所以需要进行字符串分割,取出tagId.
+	tagIdsStr = c.Query("tagIds")
+	// 对字符串进行分割
+	tagIdsSlice := strings.Split(tagIdsStr, ",")
+
+	// 业务处理
+	if issues, err = logic.ListIssueTagFilter(page, size, tagIdsSlice); err != nil {
+		zap.L().Error("ListIssueTagFilterHandler-->    logic.ListIssueTagFilter Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 操作成功
+	ResponseSuccess(c, issues)
+	return
+
 }

@@ -28,7 +28,13 @@ func UpdateIssue(issueId int64, content string) (err error) {
 	return
 }
 
-func GetAllInformation(issue *models.Issue) (err error) {
-	err = db.Model(&models.Issue{}).Preload("Milestones").Preload("Tags").Preload("Comments").Find(&issue).Error
+func GetComment(issue *models.Issue) (err error) {
+	err = db.Model(&models.Issue{}).Preload("Comments").Find(&issue).Error
+	return
+}
+
+// GetIssues 根据 issueId 取 issue, 并且分页
+func GetIssues(page, size int, IssueIntersection []string) (issues []*models.Issue, err error) {
+	err = db.Find(&issues, IssueIntersection).Limit(size).Offset((page - 1) * size).Error
 	return
 }

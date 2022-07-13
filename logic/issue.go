@@ -2,6 +2,7 @@ package logic
 
 import (
 	"github.com/yeongbok77/TaskManager/dao/mysql"
+	"github.com/yeongbok77/TaskManager/dao/redis"
 	"github.com/yeongbok77/TaskManager/models"
 	"go.uber.org/zap"
 )
@@ -14,12 +15,45 @@ func ListIssue(page, size int) (issues []*models.Issue, err error) {
 		return
 	}
 
+	var (
+		milestoneIds []string
+		tagIds       []string
+	)
+
 	// 获取 issue 的 milestone 和 tag 以及 comment
 	for i := range issues {
-		if err = mysql.GetAllInformation(issues[i]); err != nil {
-			zap.L().Error("mysql.GetAllInformation Err:", zap.Error(err))
+		// 获取 issue 的评论
+		if err = mysql.GetComment(issues[i]); err != nil {
+			zap.L().Error("mysql.GetComment Err:", zap.Error(err))
 			return
 		}
+
+		// 获取 issue 的 milestone
+		if milestoneIds, err = redis.GetMilestoneIds(issues[i].Id); err != nil {
+			zap.L().Error("redis.GetMilestoneIds Err:", zap.Error(err))
+			return
+		}
+		// 如果这个 issue 有 milestone 则进行mysql查询, 否则跳过
+		if len(milestoneIds) != 0 {
+			if issues[i].Milestones, err = mysql.GetMilestones(milestoneIds); err != nil {
+				zap.L().Error("mysql.GetMilestones Err:", zap.Error(err))
+				return
+			}
+		}
+
+		// 获取 issue 的 tag
+		if tagIds, err = redis.GetTagIds(issues[i].Id); err != nil {
+			zap.L().Error("redis.GetTagIds Err:", zap.Error(err))
+			return
+		}
+		// 如果这个 issue 有 tag 则进行mysql查询, 否则跳过
+		if len(tagIds) != 0 {
+			if issues[i].Tags, err = mysql.GetTags(tagIds); err != nil {
+				zap.L().Error("mysql.GetTags Err:", zap.Error(err))
+				return
+			}
+		}
+
 	}
 
 	return
@@ -46,5 +80,72 @@ func ActionUpdateIssue(issueId int64, content string) (err error) {
 	if err = mysql.UpdateIssue(issueId, content); err != nil {
 		zap.L().Error("mysql.UpdateIssue Err:", zap.Error(err))
 	}
+	return
+}
+
+// ListIssueTagFilter 根据 tag 对 issue 进行过滤查询
+func ListIssueTagFilter(page, size int, tagIdsSlice []string) (issues []*models.Issue, err error) {
+	var (
+		IssueIdIntersection []string // issueId 的交集
+	)
+
+	// 取 tagId 所属 issueId 的交集
+	if IssueIdIntersection, err = redis.GetIssueIntersection(tagIdsSlice); err != nil {
+		zap.L().Error("redis.GetIssueIntersection Err:", zap.Error(err))
+		return
+	}
+
+	// 没有数据 直接返回 nil 即可
+	if IssueIdIntersection == nil {
+		return nil, nil
+	}
+
+	// 根据 issueId 查询 issue
+	if issues, err = mysql.GetIssues(page, size, IssueIdIntersection); err != nil {
+		zap.L().Error("mysql.GetIssues Err:", zap.Error(err))
+		return
+	}
+
+	var (
+		milestoneIds []string
+		tagIds       []string
+	)
+
+	// 获取 issue 的 milestone 和 tag 以及 comment
+	for i := range issues {
+		// 获取 issue 的评论
+		if err = mysql.GetComment(issues[i]); err != nil {
+			zap.L().Error("mysql.GetComment Err:", zap.Error(err))
+			return
+		}
+
+		// 获取 issue 的 milestone
+		if milestoneIds, err = redis.GetMilestoneIds(issues[i].Id); err != nil {
+			zap.L().Error("redis.GetMilestoneIds Err:", zap.Error(err))
+			return
+		}
+		// 如果这个 issue 有 milestone 则进行mysql查询, 否则跳过
+		if len(milestoneIds) != 0 {
+			if issues[i].Milestones, err = mysql.GetMilestones(milestoneIds); err != nil {
+				zap.L().Error("mysql.GetMilestones Err:", zap.Error(err))
+				return
+			}
+		}
+
+		// 获取 issue 的 tag
+		if tagIds, err = redis.GetTagIds(issues[i].Id); err != nil {
+			zap.L().Error("redis.GetTagIds Err:", zap.Error(err))
+			return
+		}
+		// 如果这个 issue 有 tag 则进行mysql查询, 否则跳过
+		if len(tagIds) != 0 {
+			if issues[i].Tags, err = mysql.GetTags(tagIds); err != nil {
+				zap.L().Error("mysql.GetTags Err:", zap.Error(err))
+				return
+			}
+		}
+
+	}
+
 	return
 }

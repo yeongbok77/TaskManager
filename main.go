@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/yeongbok77/TaskManager/dao/mysql"
+	"github.com/yeongbok77/TaskManager/dao/redis"
 	"github.com/yeongbok77/TaskManager/logger"
 	"github.com/yeongbok77/TaskManager/router"
 	"github.com/yeongbok77/TaskManager/settings"
@@ -22,6 +23,11 @@ func main() {
 	// MySQL初始化
 	if err := mysql.Init(settings.Conf.MySQLConfig); err != nil {
 		panic("mysql.Init err")
+		return
+	}
+	// Redis初始化
+	if err := redis.Init(settings.Conf.RedisConfig); err != nil {
+		panic("redis.Init err")
 		return
 	}
 
