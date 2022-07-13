@@ -11,7 +11,7 @@ func ApplyMilestone(issueId, milestoneId int64) (err error) {
 	keyIssueMilestoneSet := getRedisKey(KeyIssueMilestoneSet) + strconv.Itoa(int(issueId))
 
 	// 获取 milestone 的集合key
-	keyMilestoneSet := getRedisKey(KeyMilestoneSet) + strconv.Itoa(int(issueId))
+	keyMilestoneSet := getRedisKey(KeyMilestoneSet) + strconv.Itoa(int(milestoneId))
 
 	pipe := rdb.TxPipeline()
 

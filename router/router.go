@@ -21,7 +21,7 @@ func SetUpRouter() (r *gin.Engine) {
 		v1.POST("/addComment", controller.AddCommentHandler)
 		v1.GET("/list", controller.ListIssueHandler)
 		v1.GET("/listIssueTagFilter", controller.ListIssueTagFilterHandler)
-		//v1.GET("/listBasisMilestone", controller.ListBasisMilestoneHandler)
+		v1.GET("/listBasisMilestone", controller.ListBasisMilestoneHandler)
 	}
 
 	// tag 路由组

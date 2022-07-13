@@ -32,3 +32,22 @@ func GetIssueIntersection(tagIds []string) (IssueIntersection []string, err erro
 	}
 	return
 }
+
+// GetIssueIds 根据 milestoneId 获取 issueId
+func GetIssueIds(milestoneId string) (issueIds []string, err error) {
+	// 获取 milestoneSet 的 key
+	keyMilestoneSet := getRedisKey(KeyMilestoneSet) + milestoneId
+
+	// n > 0 表示key存在, 否则不存在
+	n, _ := rdb.Exists(keyMilestoneSet).Result()
+	if n <= 0 {
+		return nil, nil
+	}
+
+	// 获取 issueIds
+	if issueIds, err = rdb.SMembers(keyMilestoneSet).Result(); err != nil {
+		zap.L().Error("rdb.SMembers Err:", zap.Error(err))
+	}
+	return
+
+}

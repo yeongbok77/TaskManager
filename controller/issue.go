@@ -118,7 +118,6 @@ func ListIssueTagFilterHandler(c *gin.Context) {
 	)
 
 	// 获取参数 page 和 size 参数
-	// 获取参数 page 和 size 参数
 	if page, err = strconv.Atoi(c.Query("page")); err != nil {
 		zap.L().Error("ListIssueHandler-->	strconv.Atoi Err:", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
@@ -149,4 +148,27 @@ func ListIssueTagFilterHandler(c *gin.Context) {
 	ResponseSuccess(c, issues)
 	return
 
+}
+
+// ListBasisMilestoneHandler 根据 milestone 列出 issue
+func ListBasisMilestoneHandler(c *gin.Context) {
+	var (
+		issues      []*models.Issue
+		milestoneId string
+		err         error
+	)
+
+	// 获取 milestoneId 参数
+	milestoneId = c.Query("milestoneId")
+
+	// 业务处理
+	if issues, err = logic.ListBasisMilestone(milestoneId); err != nil {
+		zap.L().Error("ListBasisMilestoneHandler-->    logic.ListBasisMilestone Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 操作成功
+	ResponseSuccess(c, issues)
+	return
 }

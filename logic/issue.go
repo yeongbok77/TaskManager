@@ -101,7 +101,7 @@ func ListIssueTagFilter(page, size int, tagIdsSlice []string) (issues []*models.
 	}
 
 	// 根据 issueId 查询 issue
-	if issues, err = mysql.GetIssues(page, size, IssueIdIntersection); err != nil {
+	if issues, err = mysql.GetIssuesPage(page, size, IssueIdIntersection); err != nil {
 		zap.L().Error("mysql.GetIssues Err:", zap.Error(err))
 		return
 	}
@@ -124,6 +124,7 @@ func ListIssueTagFilter(page, size int, tagIdsSlice []string) (issues []*models.
 			zap.L().Error("redis.GetMilestoneIds Err:", zap.Error(err))
 			return
 		}
+
 		// 如果这个 issue 有 milestone 则进行mysql查询, 否则跳过
 		if len(milestoneIds) != 0 {
 			if issues[i].Milestones, err = mysql.GetMilestones(milestoneIds); err != nil {
@@ -137,6 +138,7 @@ func ListIssueTagFilter(page, size int, tagIdsSlice []string) (issues []*models.
 			zap.L().Error("redis.GetTagIds Err:", zap.Error(err))
 			return
 		}
+
 		// 如果这个 issue 有 tag 则进行mysql查询, 否则跳过
 		if len(tagIds) != 0 {
 			if issues[i].Tags, err = mysql.GetTags(tagIds); err != nil {
@@ -145,6 +147,32 @@ func ListIssueTagFilter(page, size int, tagIdsSlice []string) (issues []*models.
 			}
 		}
 
+	}
+
+	return
+}
+
+// ListBasisMilestone 根据 milestoneId 列出 issues
+func ListBasisMilestone(milestoneId string) (issues []*models.Issue, err error) {
+	var (
+		issueIds []string
+	)
+
+	// 查 redis 取出对应的 issueId
+	if issueIds, err = redis.GetIssueIds(milestoneId); err != nil {
+		zap.L().Error("redis.GetIssueIds Err:", zap.Error(err))
+		return
+	}
+
+	// key 不存在, 返回 nil
+	if issueIds == nil {
+		return nil, nil
+	}
+
+	// mysql 获取 issue
+	if issues, err = mysql.GetIssues(issueIds); err != nil {
+		zap.L().Error("mysql.GetIssues Err:", zap.Error(err))
+		return
 	}
 
 	return
