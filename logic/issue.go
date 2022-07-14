@@ -205,12 +205,6 @@ func Search(q string) (issues []*models.Issue, err error) {
 		return
 	}
 
-	if len(issueIds) != 0 {
-		zap.L().Error("ES 查出来的不为空")
-	} else {
-		zap.L().Error("ES 查出来的是空的")
-	}
-
 	// 根据 issueId 查询 issue
 	if issues, err = mysql.GetIssues(issueIds); err != nil {
 		zap.L().Error("mysql.GetIssues Err:", zap.Error(err))
