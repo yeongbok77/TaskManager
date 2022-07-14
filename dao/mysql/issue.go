@@ -10,9 +10,8 @@ func GetAllIssue(page, size int) (issues []*models.Issue, err error) {
 }
 
 // CreateIssue 根据用户写入的内容，创建一个 issue
-func CreateIssue(content string) (err error) {
-	issue := &models.Issue{Content: content}
-	err = db.Select("content").Create(&issue).Error
+func CreateIssue(issue *models.Issue) (err error) {
+	err = db.Create(&issue).Error
 	return
 }
 

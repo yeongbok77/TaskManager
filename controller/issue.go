@@ -172,3 +172,25 @@ func ListBasisMilestoneHandler(c *gin.Context) {
 	ResponseSuccess(c, issues)
 	return
 }
+
+// SearchHandler 通过搜索tag或评论内容,来查询issue
+func SearchHandler(c *gin.Context) {
+	var (
+		q      string // 用户输入的搜索内容
+		issues []*models.Issue
+		err    error
+	)
+	// 获取用户输入的搜索内容
+	q = c.Query("q")
+
+	// 业务逻辑
+	if issues, err = logic.Search(q); err != nil {
+		zap.L().Error("SearchHandler-->    logic.Search Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 操作成功
+	ResponseSuccess(c, issues)
+	return
+}

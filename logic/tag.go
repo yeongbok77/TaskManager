@@ -1,6 +1,8 @@
 package logic
 
 import (
+	"context"
+	"github.com/yeongbok77/TaskManager/dao/es"
 	"github.com/yeongbok77/TaskManager/dao/mysql"
 	"github.com/yeongbok77/TaskManager/dao/redis"
 	"go.uber.org/zap"
@@ -8,9 +10,26 @@ import (
 
 // ApplyTag 为 issue 分配 tag 业务处理
 func ApplyTag(issueId, tagId int64) (err error) {
+	var (
+		tagContent string
+	)
 	if err = redis.ApplyTag(issueId, tagId); err != nil {
 		zap.L().Error("redis.ApplyTag Err:", zap.Error(err))
+		return
 	}
+	// 获取 tag 的内容
+	if tagContent, err = mysql.GetTagContent(tagId); err != nil {
+		zap.L().Error("mysql.GetTagContent Err:", zap.Error(err))
+		return
+	}
+	zap.L().Error("=====tag 的内容是："+tagContent, zap.Error(nil))
+	ctx := context.Background()
+	// 向 es 写入 tagContent
+	if err = es.InsertTag(issueId, tagContent, ctx); err != nil {
+		zap.L().Error("es.InsertTag Err:", zap.Error(err))
+		return
+	}
+
 	return
 }
 

@@ -1,6 +1,7 @@
 package es
 
 import (
+	"context"
 	"github.com/olivere/elastic/v7"
 	"go.uber.org/zap"
 	"log"
@@ -9,6 +10,27 @@ import (
 )
 
 var client *elastic.Client
+
+// 索引mapping定义
+const mapping = `
+{
+  "mappings": {
+    "properties": {
+      "issue_id": {
+        "type": "integer"
+      },
+      "issue_content": {
+        "type": "text"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "comments": {
+        "type": "text"
+      }
+    }
+  }
+}`
 
 func Init() (err error) {
 	// 创建ES client用于后续操作ES
@@ -32,6 +54,24 @@ func Init() (err error) {
 		// Handle error
 		zap.L().Error("Elastic Search connection failed", zap.Error(err))
 		panic(err)
+	}
+
+	// 执行ES请求需要提供一个上下文对象
+	ctx := context.Background()
+
+	// 首先检测下issueInfo索引是否存在
+	exists, err := client.IndexExists("issueinfo").Do(ctx)
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+	if !exists {
+		// weibo索引不存在，则创建一个
+		_, err := client.CreateIndex("issueinfo").BodyString(mapping).Do(ctx)
+		if err != nil {
+			// Handle error
+			panic(err)
+		}
 	}
 
 	return

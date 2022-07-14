@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/yeongbok77/TaskManager/dao/es"
 	"github.com/yeongbok77/TaskManager/dao/mysql"
 	"github.com/yeongbok77/TaskManager/dao/redis"
 	"github.com/yeongbok77/TaskManager/logger"
@@ -28,6 +29,12 @@ func main() {
 	// Redis初始化
 	if err := redis.Init(settings.Conf.RedisConfig); err != nil {
 		panic("redis.Init err")
+		return
+	}
+
+	// ElasticSearch 初始化
+	if err := es.Init(); err != nil {
+		panic("es.Init err")
 		return
 	}
 
