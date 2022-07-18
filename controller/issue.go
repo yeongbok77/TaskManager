@@ -7,6 +7,7 @@ import (
 	"github.com/yeongbok77/TaskManager/logic"
 	"github.com/yeongbok77/TaskManager/models"
 	"go.uber.org/zap"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -68,7 +69,7 @@ func ActionIssueHandler(c *gin.Context) {
 	switch actionType {
 	case 1:
 		//	获取 content 参数
-		content = c.Query("content")
+		content = xssHander(c.Query("content"))
 		// 添加 issue 业务处理
 		if err = logic.ActionAddIssue(content); err != nil {
 			zap.L().Error("ActionIssueHandler-->    logic.ActionAddIssue Err:", zap.Error(err))
@@ -96,7 +97,7 @@ func ActionIssueHandler(c *gin.Context) {
 			return
 		}
 		// 获取 content 参数
-		content = c.Query("content")
+		content = xssHander(c.Query("content"))
 		// 修改 issue 业务处理
 		if err = logic.ActionUpdateIssue(issueId, content); err != nil {
 			zap.L().Error("ActionIssueHandler-->    logic.ActionUpdateIssue Err:", zap.Error(err))
@@ -183,7 +184,7 @@ func SearchHandler(c *gin.Context) {
 		err    error
 	)
 	// 获取用户输入的搜索内容
-	q = c.Query("q")
+	q = xssHander(c.Query("q"))
 
 	// 业务逻辑
 	if issues, err = logic.Search(q); err != nil {
@@ -230,4 +231,9 @@ func StatusChangeHandler(c *gin.Context) {
 		return
 	}
 
+}
+
+// xssHander 预防xss, 进行转义
+func xssHander(s string) string {
+	return template.HTMLEscapeString(s)
 }

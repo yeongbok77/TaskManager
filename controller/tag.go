@@ -92,7 +92,7 @@ func ActionTagHandler(c *gin.Context) {
 	switch actionType {
 	case 1:
 		// 获取tag内容参数
-		content = c.Query("content")
+		content = xssHander(c.Query("content"))
 		if err = logic.CreateTag(content); err != nil {
 			zap.L().Error("ActionTagHandler-->    logic.CreateTag Err:", zap.Error(err))
 			ResponseError(c, CodeServerBusy)

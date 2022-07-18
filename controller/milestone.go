@@ -24,7 +24,7 @@ func ActionMilestoneHandler(c *gin.Context) {
 	// actionType:  1 创建tag
 	switch actionType {
 	case 1:
-		content = c.Query("content")
+		content = xssHander(c.Query("content"))
 		if err = logic.CreateMilestone(content); err != nil {
 			zap.L().Error("ActionMilestoneHandler-->    logic.CreateMilestone Err:", zap.Error(err))
 			ResponseError(c, CodeServerBusy)

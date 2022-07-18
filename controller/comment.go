@@ -15,7 +15,7 @@ func AddCommentHandler(c *gin.Context) {
 		err     error
 	)
 	// 获取参数
-	content = c.PostForm("content")
+	content = xssHander(c.Query("content"))
 	if issueId, err = strconv.ParseInt(c.Query("issueId"), 0, 64); err != nil {
 		zap.L().Error("AddCommentHandler-->    strconv.ParseInt Err:", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
