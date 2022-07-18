@@ -66,7 +66,7 @@ func Init() (err error) {
 		panic(err)
 	}
 	if !exists {
-		// weibo索引不存在，则创建一个
+		// 索引不存在，则创建一个
 		_, err := client.CreateIndex("issueinfo").BodyString(mapping).Do(ctx)
 		if err != nil {
 			// Handle error

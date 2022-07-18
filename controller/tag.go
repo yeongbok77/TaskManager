@@ -41,6 +41,39 @@ func ApplyTagHandler(c *gin.Context) {
 
 }
 
+// RemoveTagHandler  对 issue 附带的 tag 进行解绑
+func RemoveTagHandler(c *gin.Context) {
+	var (
+		issueId int64
+		tagId   int64
+		err     error
+	)
+
+	// 获取 issueId 和 tagId 参数
+	if issueId, err = strconv.ParseInt(c.Query("issueId"), 0, 64); err != nil {
+		zap.L().Error("RemoveTagHandler-->    strconv.ParseInt Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	if tagId, err = strconv.ParseInt(c.Query("tagId"), 0, 64); err != nil {
+		zap.L().Error("RemoveTagHandler-->    strconv.ParseInt Err:strconv.ParseInt Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 业务处理
+	if err = logic.RemoveTag(issueId, tagId); err != nil {
+		zap.L().Error("RemoveTagHandler-->    logic.RemoveTag Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 操作成功
+	ResponseSuccess(c, nil)
+	return
+
+}
+
 // ActionTagHandler tag 的增删改
 func ActionTagHandler(c *gin.Context) {
 	var (
@@ -58,12 +91,14 @@ func ActionTagHandler(c *gin.Context) {
 	// actionType:  1 创建tag
 	switch actionType {
 	case 1:
+		// 获取tag内容参数
 		content = c.Query("content")
 		if err = logic.CreateTag(content); err != nil {
 			zap.L().Error("ActionTagHandler-->    logic.CreateTag Err:", zap.Error(err))
 			ResponseError(c, CodeServerBusy)
 			return
 		}
+
 	}
 
 	// 操作成功

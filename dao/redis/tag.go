@@ -47,3 +47,8 @@ func GetTagIds(issueId int64) (tagIds []string, err error) {
 
 	return
 }
+
+//// DeleteTag 删除 tag 对应的集合
+//func DeleteTag(tagId int64) (issueIds []string, err error) {
+//
+//}

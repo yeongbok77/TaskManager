@@ -34,3 +34,34 @@ func AddCommentHandler(c *gin.Context) {
 	return
 
 }
+
+// DeleteCommentHandler 删除评论的接口
+func DeleteCommentHandler(c *gin.Context) {
+	var (
+		issueId   int64
+		commentId int64
+		err       error
+	)
+	// 获取参数
+	if issueId, err = strconv.ParseInt(c.Query("issueId"), 0, 64); err != nil {
+		zap.L().Error("DeleteCommentHandler-->    strconv.ParseInt Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	if commentId, err = strconv.ParseInt(c.Query("commentId"), 0, 64); err != nil {
+		zap.L().Error("DeleteCommentHandler-->    strconv.ParseInt Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 业务处理
+	if err = logic.DeleteComment(issueId, commentId); err != nil {
+		zap.L().Error("DeleteCommentHandler-->    logic.DeleteComment", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 操作成功
+	ResponseSuccess(c, nil)
+	return
+}

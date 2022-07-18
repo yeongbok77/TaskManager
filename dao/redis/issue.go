@@ -2,6 +2,7 @@ package redis
 
 import (
 	"go.uber.org/zap"
+	"strconv"
 )
 
 func GetIssueIntersection(tagIds []string) (IssueIntersection []string, err error) {
@@ -50,4 +51,25 @@ func GetIssueIds(milestoneId string) (issueIds []string, err error) {
 	}
 	return
 
+}
+
+// RemoveTag	根据 issueId 和 tagId, 对各自的 set 进行更新
+func RemoveTag(issueId, tagId int64) (err error) {
+	// 分别获取各自的 key
+	keyIssueTagSet := getRedisKey(KeyIssueTagSet) + strconv.Itoa(int(issueId))
+	keyTagSet := getRedisKey(KeyTagSet) + strconv.Itoa(int(tagId))
+
+	// 开启一个 TxPipeline 事务
+	pipe := rdb.TxPipeline()
+
+	// 从 issue 的 tag 集合里删除 tagId
+	pipe.SRem(keyIssueTagSet, tagId)
+
+	// 从 tag 的集合里删除 issueId
+	pipe.SRem(keyTagSet, issueId)
+
+	// 提交事务
+	_, err = pipe.Exec()
+
+	return
 }

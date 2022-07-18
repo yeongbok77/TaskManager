@@ -3,9 +3,11 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"github.com/yeongbok77/TaskManager/logic"
 	"github.com/yeongbok77/TaskManager/models"
 	"go.uber.org/zap"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -21,7 +23,7 @@ func ListIssueHandler(c *gin.Context) {
 
 	// 获取参数 page 和 size 参数
 	if page, err = strconv.Atoi(c.Query("page")); err != nil {
-		zap.L().Error("ListIssueHandler-->	strconv.Atoi Err:", zap.Error(err))
+		zap.L().Error("ListIssueHandler-->    strconv.Atoi Err:", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
@@ -193,4 +195,39 @@ func SearchHandler(c *gin.Context) {
 	// 操作成功
 	ResponseSuccess(c, issues)
 	return
+}
+
+// StatusChangeClientHandler 消息推送的前端页面, 因为需要手动的发送webSocket请求
+func StatusChangeClientHandler(c *gin.Context) {
+	// 加载前端 html 页面
+	c.HTML(http.StatusOK, "wsClient.html", nil)
+}
+
+// StatusChangeHandler issue状态变更, 实时推送的接口
+func StatusChangeHandler(c *gin.Context) {
+	var (
+		conn     *websocket.Conn // WebSocket 连接
+		upgrader = websocket.Upgrader{
+			// 允许跨域
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		}
+		err error
+	)
+
+	// 升级为 WebSocket 协议
+	if conn, err = upgrader.Upgrade(c.Writer, c.Request, nil); err != nil {
+		zap.L().Error("StatusChangeHandler-->    upgrader.Upgrade Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
+	// 业务处理
+	if err = logic.StatusChange(conn); err != nil {
+		zap.L().Error("StatusChangeHandler-->    logic.StatusChange Err:", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+
 }

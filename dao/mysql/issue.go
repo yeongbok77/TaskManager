@@ -32,7 +32,7 @@ func GetComment(issue *models.Issue) (err error) {
 	return
 }
 
-// GetIssues 根据 issueId 取 issue, 并且分页
+// GetIssuesPage 根据 issueId 取 issue, 并且分页
 func GetIssuesPage(page, size int, IssueIntersection []string) (issues []*models.Issue, err error) {
 	err = db.Find(&issues, IssueIntersection).Limit(size).Offset((page - 1) * size).Error
 	return

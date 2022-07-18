@@ -2,11 +2,14 @@ package logic
 
 import (
 	"context"
+	"github.com/Shopify/sarama"
+	"github.com/gorilla/websocket"
 	"github.com/yeongbok77/TaskManager/dao/es"
 	"github.com/yeongbok77/TaskManager/dao/mysql"
 	"github.com/yeongbok77/TaskManager/dao/redis"
 	"github.com/yeongbok77/TaskManager/models"
 	"go.uber.org/zap"
+	"sync"
 	"time"
 )
 
@@ -259,5 +262,48 @@ func Search(q string) (issues []*models.Issue, err error) {
 	}
 
 	return
+
+}
+
+// StatusChange issue状态变更时的业务处理
+func StatusChange(conn *websocket.Conn) (err error) {
+	var wg sync.WaitGroup
+
+	// 首先, 创建一个消费者
+	consumer, err := sarama.NewConsumer([]string{"localhost:9092"}, nil)
+	if err != nil {
+		zap.L().Error("sarama.NewConsumer Err:", zap.Error(err))
+		return
+	}
+
+	// 这是一个大的for循环, 让它一直重复进行消费消息和写入WebSocket的操作
+	for {
+
+		// 根据 topic 取到所有分区
+		partitionList, err := consumer.Partitions("issue")
+		if err != nil {
+			zap.L().Error("consumer.Partitions Err:", zap.Error(err))
+			continue
+		}
+
+		// 循环的消费消息,并通过 WebSocket 推送到前端
+		for _, p := range partitionList {
+			partitionConsumer, err := consumer.ConsumePartition("issue", p, sarama.OffsetNewest)
+			if err != nil {
+				zap.L().Error("consumer.ConsumePartition Err:", zap.Error(err))
+				continue
+			}
+			wg.Add(1)
+			go func() {
+				for m := range partitionConsumer.Messages() {
+					conn.WriteMessage(websocket.TextMessage, m.Value)
+				}
+				wg.Done()
+			}()
+
+		}
+		wg.Wait()
+
+	}
 
 }
